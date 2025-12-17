@@ -1,6 +1,6 @@
 import { Center, Group, Stack } from '@mantine/core';
 import { createFileRoute } from '@tanstack/react-router';
-import { Editor } from '@/pages/home/home';
+import { Editor } from '@/pages/editor';
 
 export const Route = createFileRoute('/')({
   component: Index,

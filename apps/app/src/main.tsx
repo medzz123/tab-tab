@@ -2,6 +2,8 @@ import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/notifications/styles.css';
 import '@mantine/spotlight/styles.css';
+// ‼️ import tiptap styles after core package styles
+import '@mantine/tiptap/styles.css';
 import './global_style.css';
 
 import { MantineProvider } from '@mantine/core';

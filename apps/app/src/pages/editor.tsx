@@ -1,19 +1,54 @@
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { Text } from '@mantine/core';
+import { Link, RichTextEditor } from '@mantine/tiptap';
+import { IconBold, IconItalic } from '@tabler/icons-react';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCaret from '@tiptap/extension-collaboration-caret';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { BubbleMenu, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
-
-import './home.styles.css';
 import { BaseCard } from '@/components/base_card';
 import { clientConfig } from '@/config';
 
+const BoldIcon = () => <IconBold size={16} stroke={3.5} />;
+const ItalicIcon = () => <IconItalic size={16} stroke={3.5} />;
+
 const colors = ['#958DF1', '#F98181', '#FBBC88', '#FAF594', '#70CFF8'];
-const names = ['Jet', 'Spike', 'Faye', 'Ed', 'Ein', 'Some', 'Other', 'Name', 'Going', 'On'];
+const names = [
+  'Friendly Bear',
+  'Happy Penguin',
+  'Clever Fox',
+  'Wise Owl',
+  'Swift Deer',
+  'Curious Cat',
+  'Brave Lion',
+  'Gentle Whale',
+  'Playful Dolphin',
+  'Elegant Swan',
+  'Bold Eagle',
+  'Calm Turtle',
+  'Energetic Rabbit',
+  'Mysterious Wolf',
+  'Graceful Gazelle',
+  'Cheerful Squirrel',
+  'Noble Horse',
+  'Cunning Raccoon',
+  'Majestic Tiger',
+  'Peaceful Panda',
+  'Adventurous Otter',
+  'Loyal Dog',
+  'Independent Cat',
+  'Social Butterfly',
+  'Free Bird',
+  'Deep Fish',
+  'Strong Bull',
+  'Quick Cheetah',
+  'Silent Snake',
+  'Bright Firefly',
+];
+
 const getRandomElement = (list: string[]) => list[Math.floor(Math.random() * list.length)];
 
 type TiptapProps = {
@@ -26,8 +61,10 @@ const Tiptap: React.FC<TiptapProps> = (props) => {
   const { provider, name, color } = props;
 
   const editor = useEditor({
+    shouldRerenderOnTransaction: true,
     extensions: [
-      StarterKit.configure(),
+      StarterKit.configure({ link: false }),
+      Link,
       Collaboration.configure({
         document: provider.document,
       }),
@@ -41,7 +78,43 @@ const Tiptap: React.FC<TiptapProps> = (props) => {
     ],
   });
 
-  return <EditorContent editor={editor} />;
+  return (
+    <RichTextEditor
+      editor={editor}
+      variant="default"
+      h="100%"
+      style={{
+        flex: 1,
+        minHeight: 0,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        borderWidth: 0,
+        overflowY: 'scroll',
+      }}
+      styles={{
+        root: {
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+        },
+        content: { flex: 1, minHeight: 0, overflow: 'hidden' },
+      }}
+    >
+      {editor && (
+        <BubbleMenu editor={editor}>
+          <RichTextEditor.ControlsGroup>
+            <RichTextEditor.Bold icon={BoldIcon} />
+            <RichTextEditor.Italic icon={ItalicIcon} />
+            <RichTextEditor.Link />
+          </RichTextEditor.ControlsGroup>
+        </BubbleMenu>
+      )}
+
+      <RichTextEditor.Content />
+    </RichTextEditor>
+  );
 };
 
 export const Editor: React.FC = () => {
