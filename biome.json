@@ -42,6 +42,7 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "a11y": "off",
       "style": {
         "useTemplate": "off",
         "noNonNullAssertion": "off"

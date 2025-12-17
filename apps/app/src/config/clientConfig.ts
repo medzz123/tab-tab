@@ -5,14 +5,16 @@
  */
 
 type Config = {
-  trpcUrl: string;
+  apiUrl: string;
+  wsUrl: string;
   appAppUrl: string;
   stage: 'local' | 'dev' | 'prod' | 'staging' | string;
 };
 
 // cspell:disable
 const localConfig: Config = {
-  trpcUrl: 'http://localhost:7005/trpc',
+  apiUrl: 'http://localhost:7001',
+  wsUrl: 'ws://localhost:7001/collaboration',
   appAppUrl: 'http://localhost:7000',
   stage: 'local',
 };

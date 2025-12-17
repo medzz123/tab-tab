@@ -13,9 +13,6 @@
     "ts": {
       "dependsOn": ["^ts"]
     },
-    "@tab-tab/app#ts": {
-      "dependsOn": ["^ts", "@tab-tab/api-routes#trpc"]
-    },
     "trpc": {
       "cache": false
     },

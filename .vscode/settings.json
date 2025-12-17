@@ -8,6 +8,7 @@
     "dicebear",
     "dotenv",
     "healthcheck",
+    "hocuspocus",
     "imask",
     "isready",
     "jscodeshift",
@@ -24,7 +25,8 @@
     "tsdown",
     "tsgo",
     "vite",
-    "vpcaccess"
+    "vpcaccess",
+    "ydoc"
   ],
   "files.associations": {
     "*.env": "env",

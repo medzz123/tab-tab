@@ -1,67 +1,36 @@
 import 'dotenv/config';
-import util from 'node:util';
-import { createContext } from '@tab-tab/api-routes/context';
-import { router } from '@tab-tab/api-routes/router';
-import { prisma } from '@tab-tab/db/prisma';
+import { Hocuspocus } from '@hocuspocus/server';
+import { serve } from '@hono/node-server';
+import { createNodeWebSocket } from '@hono/node-ws';
 import { log } from '@tab-tab/logger';
-import { createExpressMiddleware } from '@trpc/server/adapters/express';
-import express, { type Express } from 'express';
+import { Hono } from 'hono';
 import { env } from './env';
 
-const app: Express = express();
-
-const isProduction = env.ENVIRONMENT === 'production';
-
-process.on('uncaughtException', (error) => {
-  log.error({ error }, 'server: uncaught exception');
-  if (!isProduction) {
-    return;
-  }
+const hocuspocus = new Hocuspocus({
+  name: 'default-instance',
+  quiet: true,
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  let readablePromise: string | Promise<unknown> = promise;
-  try {
-    readablePromise = util.inspect(promise);
-  } catch (error) {
-    log.error({ error }, 'server: failed to inspect promise');
-  }
+const app = new Hono();
 
-  log.error(`server: unhandled promise rejection: ${readablePromise}: ${reason}`);
-  if (!isProduction) {
-    return;
-  }
-});
+const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
-app.use(
-  '/trpc',
-  createExpressMiddleware({
-    router: router,
-    createContext: (trpCtx) => {
-      return createContext({
-        trpcOptions: trpCtx,
-        context: { env, db: prisma },
-      });
+app.get(
+  '/collaboration',
+  upgradeWebSocket((connection) => ({
+    onOpen(_evt, ws) {
+      if (ws !== undefined) {
+        hocuspocus.handleConnection(ws.raw!, connection.req.raw as any);
+      }
     },
-    onError: (opts) => {
-      const { error, path } = opts;
-      log.warn({ path, error }, `TRPC Failed on path: ${path}`);
-    },
-  })
+  }))
 );
 
-app.use(express.json({ limit: '100kb' }));
-app.use(express.urlencoded({ extended: true, limit: '100kb' }));
-
-app.get('/health-check', async (_, res) => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    res.status(200).send({ status: `OK` });
-  } catch {
-    res.status(500).send({ status: `Not OK` });
-  }
+const server = serve({
+  fetch: app.fetch,
+  port: env.PORT,
 });
 
-app.listen(env.PORT, () => {
-  log.info(`Running on port ${env.PORT} - v1`);
-});
+injectWebSocket(server);
+
+log.info(`Server listening on port ${env.PORT}`);

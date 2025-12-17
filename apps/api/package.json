@@ -9,23 +9,32 @@
     "build": "tsdown"
   },
   "devDependencies": {
-    "@tab-tab/typescript-config": "workspace:*",
-    "@tab-tab/logger": "workspace:*",
-    "@tab-tab/api-routes": "workspace:*",
     "@tab-tab/db": "workspace:*",
     "@tab-tab/env": "workspace:*",
+    "@tab-tab/logger": "workspace:*",
+    "@tab-tab/typescript-config": "workspace:*",
     "@types/cors": "2.8.17",
     "@types/express": "4.17.21",
     "@types/node": "22.13.11",
+    "@types/ws": "8.18.1",
     "tsdown": "catalog:",
     "tsx": "catalog:"
   },
   "dependencies": {
+    "@hocuspocus/server": "^3.4.3",
+    "@hono/node-server": "^1.19.7",
+    "@hono/node-ws": "^1.2.0",
     "@trpc/server": "11.4.3",
     "axios": "catalog:",
     "cors": "2.8.5",
     "dotenv": "catalog:",
     "express": "5.2.0",
+    "hono": "^4.11.1",
+    "lib0": "0.2.115",
+    "ws": "8.18.3",
+    "y-protocols": "1.0.7",
+    "y-websocket": "3.0.0",
+    "yjs": "13.6.28",
     "zod": "catalog:"
   }
 }
