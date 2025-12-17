@@ -1,19 +1,19 @@
 {
-  "name": "@template/api",
+  "name": "@tab-tab/api",
   "type": "module",
   "scripts": {
     "ts": "tsgo -b --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
-    "dev": "turbo run @template/scripts#sync-env -- api && tsx watch src/main.ts",
+    "dev": "turbo run @tab-tab/scripts#sync-env -- api && tsx watch src/main.ts",
     "build": "tsdown"
   },
   "devDependencies": {
-    "@template/typescript-config": "workspace:*",
-    "@template/logger": "workspace:*",
-    "@template/api-routes": "workspace:*",
-    "@template/db": "workspace:*",
-    "@template/env": "workspace:*",
+    "@tab-tab/typescript-config": "workspace:*",
+    "@tab-tab/logger": "workspace:*",
+    "@tab-tab/api-routes": "workspace:*",
+    "@tab-tab/db": "workspace:*",
+    "@tab-tab/env": "workspace:*",
     "@types/cors": "2.8.17",
     "@types/express": "4.17.21",
     "@types/node": "22.13.11",

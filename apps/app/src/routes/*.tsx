@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ErrorPage } from '@/components/ErrorPage';
+import { ErrorPage } from '@/components/error_page';
 
 export const Route = createFileRoute('/*')({
   component: RouteComponent,

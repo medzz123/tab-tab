@@ -1,5 +1,5 @@
 {
-  "name": "@template/scripts",
+  "name": "@tab-tab/scripts",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -27,7 +27,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@template/typescript-config": "workspace:*",
+    "@tab-tab/typescript-config": "workspace:*",
     "@types/jscodeshift": "^0.11.11",
     "@types/lodash-es": "catalog:",
     "@types/node": "22.13.11",

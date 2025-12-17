@@ -1,5 +1,5 @@
 {
-  "name": "template",
+  "name": "tab-tab",
   "private": true,
   "type": "module",
   "workspaces": ["apps/*", "packages/*"],

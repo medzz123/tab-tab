@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import util from 'node:util';
-import { createContext } from '@template/api-routes/context';
-import { router } from '@template/api-routes/router';
-import { prisma } from '@template/db/prisma';
-import { log } from '@template/logger';
+import { createContext } from '@tab-tab/api-routes/context';
+import { router } from '@tab-tab/api-routes/router';
+import { prisma } from '@tab-tab/db/prisma';
+import { log } from '@tab-tab/logger';
 import { createExpressMiddleware } from '@trpc/server/adapters/express';
 import express, { type Express } from 'express';
 import { env } from './env';

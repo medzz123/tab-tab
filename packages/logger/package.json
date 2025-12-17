@@ -1,5 +1,5 @@
 {
-  "name": "@template/logger",
+  "name": "@tab-tab/logger",
   "type": "module",
   "exports": {
     ".": "./src/createLogger.ts",
@@ -10,7 +10,7 @@
     "express": "5.1.0"
   },
   "devDependencies": {
-    "@template/typescript-config": "workspace:*",
+    "@tab-tab/typescript-config": "workspace:*",
     "pino-pretty": "13.1.2",
     "@types/express": "4.17.21"
   },

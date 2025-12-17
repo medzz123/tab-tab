@@ -1,5 +1,5 @@
-import type { PrismaClient } from '@template/db';
-import type { ApiEnvSchema } from '@template/env/api';
+import type { PrismaClient } from '@tab-tab/db';
+import type { ApiEnvSchema } from '@tab-tab/env/api';
 import { initTRPC, type TRPCError } from '@trpc/server';
 import type * as trpcExpress from '@trpc/server/adapters/express';
 import { ZodError, z } from 'zod/v4';

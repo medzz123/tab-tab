@@ -1,20 +1,20 @@
 {
-  "name": "@template/utils",
+  "name": "@tab-tab/utils",
   "type": "module",
   "exports": {
     "./jsonParse": "./src/jsonParse.ts",
     "./hexAlpha": "./src/hexAlpha.ts"
   },
   "dependencies": {
-    "@template/result": "workspace:*",
-    "@template/shared": "workspace:*",
+    "@tab-tab/result": "workspace:*",
+    "@tab-tab/shared": "workspace:*",
     "axios": "catalog:",
     "dayjs": "catalog:",
     "decimal.js": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@template/typescript-config": "workspace:*"
+    "@tab-tab/typescript-config": "workspace:*"
   },
   "scripts": {
     "ts": "tsgo -b --noEmit",

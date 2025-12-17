@@ -6,8 +6,8 @@ import {
   type UseFormReturnType,
   useForm as useFormMantine,
 } from '@mantine/form';
-import type { ZodEntity } from '@template/shared/zod';
-import { jsonParse } from '@template/utils/jsonParse';
+import type { ZodEntity } from '@tab-tab/shared/zod';
+import { jsonParse } from '@tab-tab/utils/jsonParse';
 import { zod4Resolver } from 'mantine-form-zod-resolver';
 import { useEffect, useState } from 'react';
 import type { z } from 'zod/v4';

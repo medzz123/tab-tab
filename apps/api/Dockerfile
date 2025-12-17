@@ -5,7 +5,7 @@ RUN apk add --no-cache libc6-compat
 
 FROM base AS builder
 COPY . .
-RUN npx turbo prune @template/api --docker
+RUN npx turbo prune @tab-tab/api --docker
 
 FROM base AS installer
 WORKDIR /app
@@ -21,7 +21,7 @@ RUN pnpm install --frozen-lockfile
 COPY --from=builder /app/out/full/ .
 
 
-RUN npx turbo run build --filter=@template/api
+RUN npx turbo run build --filter=@tab-tab/api
 
 FROM base AS runner
 WORKDIR /app

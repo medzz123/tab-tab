@@ -1,6 +1,6 @@
-import { Result, type ResultType } from '@template/result';
-import type { Json } from '@template/shared/json';
-import type { ZodEntity } from '@template/shared/zod';
+import { Result, type ResultType } from '@tab-tab/result';
+import type { Json } from '@tab-tab/shared/json';
+import type { ZodEntity } from '@tab-tab/shared/zod';
 import { z } from 'zod/v4';
 
 type JsonParse = <Schema extends ZodEntity | undefined>(options: {

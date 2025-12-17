@@ -1,5 +1,5 @@
-import { apiEnvSchema } from '@template/env/api';
-import { createEnv } from '@template/env/create';
+import { apiEnvSchema } from '@tab-tab/env/api';
+import { createEnv } from '@tab-tab/env/create';
 
 export const env = createEnv({
   schema: apiEnvSchema,

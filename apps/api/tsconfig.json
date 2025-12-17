@@ -1,5 +1,5 @@
 {
-  "extends": "@template/typescript-config/base.json",
+  "extends": "@tab-tab/typescript-config/base.json",
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",

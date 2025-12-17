@@ -8,8 +8,8 @@ import {
   Text,
   useMantineTheme,
 } from '@mantine/core';
+import { hexAlpha } from '@tab-tab/utils/hexAlpha';
 import type { Icon, IconProps } from '@tabler/icons-react';
-import { hexAlpha } from '@template/utils/hexAlpha';
 import { useMemo } from 'react';
 
 type BaseCardProps = {

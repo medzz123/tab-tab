@@ -1,5 +1,5 @@
 {
-  "name": "@template/result",
+  "name": "@tab-tab/result",
   "type": "module",
   "exports": {
     ".": "./src/result.ts"
@@ -8,7 +8,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@template/typescript-config": "workspace:*"
+    "@tab-tab/typescript-config": "workspace:*"
   },
   "scripts": {
     "ts": "tsgo -b --noEmit",

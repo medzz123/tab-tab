@@ -1,5 +1,5 @@
 {
-  "name": "@template/shared",
+  "name": "@tab-tab/shared",
   "type": "module",
   "exports": {
     "./zod": "./src/zod.ts",
@@ -9,7 +9,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@template/typescript-config": "workspace:*"
+    "@tab-tab/typescript-config": "workspace:*"
   },
   "scripts": {
     "ts": "tsgo -b --noEmit",

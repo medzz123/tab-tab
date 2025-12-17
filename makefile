@@ -7,7 +7,7 @@ kill:
 s:
 	$(MAKE) kill
 	rm -rf apps/app/node_modules/.vite
-	pnpm turbo run dev --filter=@template/app --filter=@template/api
+	pnpm turbo run dev --filter=@tab-tab/app --filter=@tab-tab/api
 
 reset:
 	rm -rf .turbo
@@ -45,7 +45,7 @@ cleanup:
 	find . -type d -name "generated" -prune -exec rm -rf {} +
 	
 migrate:
-	pnpm turbo run @template/scripts#migrate
+	pnpm turbo run @tab-tab/scripts#migrate
 
 check-database-url:
-	pnpm turbo run @template/scripts#check-database-url
+	pnpm turbo run @tab-tab/scripts#check-database-url

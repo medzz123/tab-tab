@@ -20,7 +20,7 @@ const main = async () => {
     console.log(`  Dry Run: ${dryRun ? 'Yes' : 'No'}`);
 
     execSync(
-      `turbo run @template/db#db:migrate -- --name "${name}" ${dryRun ? '--create-only' : ''}`,
+      `turbo run @tab-tab/db#db:migrate -- --name "${name}" ${dryRun ? '--create-only' : ''}`,
       {
         stdio: 'inherit',
       }

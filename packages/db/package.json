@@ -1,5 +1,5 @@
 {
-  "name": "@template/db",
+  "name": "@tab-tab/db",
   "type": "module",
   "exports": {
     ".": "./generated/prisma/client.ts",
@@ -20,7 +20,7 @@
     "lint:fix": "biome check . --write"
   },
   "devDependencies": {
-    "@template/typescript-config": "workspace:*",
+    "@tab-tab/typescript-config": "workspace:*",
     "prisma": "catalog:",
     "tsx": "catalog:"
   },

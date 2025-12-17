@@ -1,7 +1,7 @@
 import path from 'node:path';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: [path.resolve('.env')] });
+dotenv.config({ path: path.resolve('.env') });
 
 const checkDatabaseUrl = () => {
   const expectedDatabaseUrl = 'postgresql://postgres:fr24Password@localhost:5433/main';

@@ -1,5 +1,5 @@
 {
-  "name": "@template/app",
+  "name": "@tab-tab/app",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,9 +12,9 @@
     "lint:fix": "biome check . --write"
   },
   "dependencies": {
-    "@template/shared": "workspace:*",
-    "@template/result": "workspace:*",
-    "@template/utils": "workspace:*",
+    "@tab-tab/shared": "workspace:*",
+    "@tab-tab/result": "workspace:*",
+    "@tab-tab/utils": "workspace:*",
     "@dicebear/core": "9.2.2",
     "@dicebear/thumbs": "^9.2.2",
     "@mantine/core": "8.3.5",
@@ -39,7 +39,7 @@
     "lodash-es": "catalog:"
   },
   "devDependencies": {
-    "@template/typescript-config": "workspace:*",
+    "@tab-tab/typescript-config": "workspace:*",
     "@tanstack/router-plugin": "1.132.47",
     "@types/lodash-es": "catalog:",
     "@types/react": "19.2.0",
