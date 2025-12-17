@@ -1,0 +1,11 @@
+config:
+  # Yaml coerces numbers (/^▽^)/
+  projectNumber: "xxx000"
+  gcp:project: base-template
+  gcp:region: europe-west1
+
+  # cspell:disable
+  playter:ENVIRONMENT: "development"
+  playter:APP_URL: "https://google.com"
+  playter:APP_API_URL: "https://google.com"
+  # cspell:enable

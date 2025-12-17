@@ -1,0 +1,62 @@
+name: Manual infra migrate
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: "Stack to migrate"
+        required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prd
+
+jobs:
+  migrate-dev:
+    name: Migrate dev stack
+    if: ${{ inputs.stack == 'dev' }}
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/infra-migrate.yml
+    with:
+      database-proxy: dev-playter:europe-west2:dev-main
+      financials-database-proxy: dev-playter:europe-west2:dev-codat
+    secrets:
+      main-db-url: ${{ secrets.DEV_MAIN_DB_MIGRATOR_URL }}
+      financials-db-url: ${{ secrets.DEV_CODAT_DB_MIGRATOR_URL }}
+      gcp-sa-key: ${{ secrets.DEV_PLAYTER_GCP_SA_KEY }}
+
+  migrate-stg:
+    name: Migrate stg stack
+    if: ${{ inputs.stack == 'stg' }}
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/infra-migrate.yml
+    with:
+      database-proxy: stg-playter:europe-west1:stg-main
+      financials-database-proxy: stg-playter:europe-west1:stg-codat
+    secrets:
+      main-db-url: ${{ secrets.STG_MAIN_DB_URL }}
+      financials-db-url: ${{ secrets.STG_CODAT_DB_URL }}
+      gcp-sa-key: ${{ secrets.STG_SA_KEY }}
+
+  migrate-prd:
+    name: Migrate prd stack
+    if: ${{ inputs.stack == 'prd' }}
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/infra-migrate.yml
+    with:
+      database-proxy: prd-playter:europe-west1:prd-main
+      financials-database-proxy: prd-playter:europe-west1:prd-codat
+    secrets:
+      main-db-url: ${{ secrets.PRD_MAIN_DB_URL }}
+      financials-db-url: ${{ secrets.PRD_CODAT_DB_URL }}
+      gcp-sa-key: ${{ secrets.PRD_SA_KEY }}

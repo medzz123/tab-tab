@@ -1,0 +1,7 @@
+name: template-infra
+description: template Infrastructure Deployment
+runtime: nodejs
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: typescript

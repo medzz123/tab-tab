@@ -1,0 +1,84 @@
+name: Infra migrate
+
+on:
+  workflow_call:
+    inputs:
+      database-proxy:
+        required: true
+        type: string
+      financials-database-proxy:
+        required: true
+        type: string
+    secrets:
+      main-db-url:
+        required: true
+      financials-db-url:
+        required: true
+      gcp-sa-key:
+        required: true
+
+jobs:
+  migrate-database:
+    name: Migrate database 🚀
+    timeout-minutes: 40
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      actions: 'read'
+    env:
+      DATABASE_URL: ${{ secrets.main-db-url }}
+      DATABASE_PROXY: ${{ inputs.database-proxy }}
+      FINANCIALS_DATABASE_URL: ${{ secrets.financials-db-url }}
+      FINANCIALS_DATABASE_PROXY: ${{ inputs.financials-database-proxy }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+          cache: "pnpm"
+          cache-dependency-path: "**/pnpm-lock.yaml"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@playter/deployment-v2
+
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.gcp-sa-key }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Cache Cloud SQL Proxy
+        id: cache-proxy
+        uses: actions/cache@v4
+        with:
+          path: cloud_sql_proxy
+          key: cloud-sql-proxy-${{ runner.os }}-v2.12.0
+
+      - name: Download Cloud SQL Proxy
+        if: steps.cache-proxy.outputs.cache-hit != 'true'
+        run: |
+          curl -o cloud_sql_proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.12.0/cloud-sql-proxy.linux.amd64
+          chmod +x cloud_sql_proxy
+
+      - run: pnpm turbo db:generate
+
+      - run: |
+          echo "DATABASE_URL=${{ env.DATABASE_URL }}" > .env
+          echo "FINANCIALS_DATABASE_URL=${{ env.FINANCIALS_DATABASE_URL }}" >> .env
+
+          echo "DATABASE_URL=${{ env.DATABASE_URL }}" > libs/prisma/.env
+
+          echo "FINANCIALS_DATABASE_URL=${{ env.FINANCIALS_DATABASE_URL }}" > libs/financials-prisma/.env
+
+      - name: Migrate database
+        env:
+          PRISMA_LOG_LEVEL: debug
+          DEBUG: "prisma:*"
+        run: ./cloud_sql_proxy ${{ env.DATABASE_PROXY }} --port=5432 & sleep 20; pnpm turbo run @playter/prisma#db:deploy
+
+      - name: Migrate database (Financials)
+        env:
+          PRISMA_LOG_LEVEL: debug
+          DEBUG: "prisma:*"
+        run: ./cloud_sql_proxy ${{ env.FINANCIALS_DATABASE_PROXY }} --port=5555 & sleep 20; pnpm turbo run @playter/financials-prisma#db:deploy

@@ -1,0 +1,23 @@
+{
+  "name": "template",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "commit": "TURBO_UI=0 turbo lint && TURBO_UI=0 turbo ts"
+  },
+  "pre-commit": ["commit"],
+  "devDependencies": {
+    "@biomejs/biome": "2.2.5",
+    "@swc/core": "^1.13.5",
+    "@types/node": "22.13.11",
+    "netlify-cli": "^23.9.1",
+    "pre-commit": "^1.2.2",
+    "turbo": "2.5.8",
+    "@typescript/native-preview": "7.0.0-dev.20251210.1"
+  },
+  "packageManager": "pnpm@10.18.1",
+  "engines": {
+    "node": ">=22.16.0"
+  }
+}

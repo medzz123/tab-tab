@@ -1,0 +1,29 @@
+{
+  "name": "@template/api-routes",
+  "exports": {
+    "./router": "./src/router.ts",
+    "./context": "./src/context.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "trpc": "tsdown",
+    "ts": "tsgo --declaration --emitDeclarationOnly --skipLibCheck --incremental",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write"
+  },
+  "devDependencies": {
+    "@template/typescript-config": "workspace:*",
+    "tsdown": "catalog:"
+  },
+  "dependencies": {
+    "@template/result": "workspace:*",
+    "@template/env": "workspace:*",
+    "@template/db": "workspace:*",
+    "@prisma/client": "catalog:",
+    "@trpc/server": "11.4.3",
+    "axios": "catalog:",
+    "dayjs": "catalog:",
+    "decimal.js": "catalog:",
+    "zod": "catalog:"
+  }
+}

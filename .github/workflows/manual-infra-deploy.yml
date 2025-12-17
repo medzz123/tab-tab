@@ -1,0 +1,108 @@
+name: Manual infra deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: "Stack to deploy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prd
+
+jobs:
+  compute-tag:
+    name: Compute image tag
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.sha.outputs.image_tag }}
+    steps:
+      - name: Derive image tag from commit
+        id: sha
+        run: echo "image_tag=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+
+  infra-dev:
+    name: Deploy dev stack
+    if: ${{ inputs.stack == 'dev' }}
+    needs: compute-tag
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/infra-deploy.yml
+    with:
+      artifact-gcp-project-id: playter-dev
+      artifact-gcp-region: europe-west2
+      artifact-registry-repo: playter-dev
+      #
+      gcp-project-id: dev-playter
+      gcp-region: europe-west2
+      pulumi-stack-name: dev
+      pulumi-cloud-url: gs://dev-playter-pulumi-state
+      netlify-site-id: "b8d2430f-3795-455e-9d5c-6f83a8370a06"
+      frontend-config-file-name: "config.dev.js"
+      image-tag: ${{ needs.compute-tag.outputs.image-tag }}
+    secrets:
+      wif-provider: ${{ secrets.WIF_PROVIDER }}
+      wif-service-account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      dev-pulumi-config-passphrase: ${{ secrets.DEV_PULUMI_CONFIG_PASSPHRASE }}
+      dev-playter-gcp-sa-key: ${{ secrets.DEV_PLAYTER_GCP_SA_KEY }}
+      netlify-auth-token: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+  infra-stg:
+    name: Deploy stg stack
+    if: ${{ inputs.stack == 'stg' }}
+    needs: compute-tag
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/infra-deploy.yml
+    with:
+      artifact-gcp-project-id: playter-dev
+      artifact-gcp-region: europe-west2
+      artifact-registry-repo: playter-dev
+      #
+      gcp-project-id: stg-playter
+      gcp-region: europe-west1
+      pulumi-stack-name: stg
+      netlify-site-id: "582b58e1-81a6-4b9a-91af-24453be2752f"
+      frontend-config-file-name: "config.stg.js"
+      pulumi-cloud-url: gs://stg-playter-pulumi-state
+      image-tag: ${{ needs.compute-tag.outputs.image-tag }}
+    secrets:
+      wif-provider: ${{ secrets.WIF_PROVIDER }}
+      wif-service-account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      dev-pulumi-config-passphrase: ${{ secrets.STG_PULUMI_PASSPHRASE }}
+      dev-playter-gcp-sa-key: ${{ secrets.STG_SA_KEY }}
+      netlify-auth-token: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+  infra-prd:
+    name: Deploy prd stack
+    if: ${{ inputs.stack == 'prd' }}
+    needs: compute-tag
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/infra-deploy.yml
+    with:
+      artifact-gcp-project-id: playter-dev
+      artifact-gcp-region: europe-west2
+      artifact-registry-repo: playter-dev
+      #
+      gcp-project-id: prd-playter
+      gcp-region: europe-west1
+      pulumi-stack-name: prd
+      netlify-site-id: "364dedc6-2474-4edb-9586-d07314ecb89f"
+      frontend-config-file-name: "config.prd.js"
+      pulumi-cloud-url: gs://prd-playter-pulumi-state
+      image-tag: ${{ needs.compute-tag.outputs.image-tag }}
+    secrets:
+      wif-provider: ${{ secrets.WIF_PROVIDER }}
+      wif-service-account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      dev-pulumi-config-passphrase: ${{ secrets.PRD_PULUMI_PASSPHRASE }}
+      dev-playter-gcp-sa-key: ${{ secrets.PRD_SA_KEY }}
+      netlify-auth-token: ${{ secrets.NETLIFY_AUTH_TOKEN }}

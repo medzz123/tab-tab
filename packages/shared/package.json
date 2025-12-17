@@ -1,0 +1,19 @@
+{
+  "name": "@template/shared",
+  "type": "module",
+  "exports": {
+    "./zod": "./src/zod.ts",
+    "./json": "./src/json.ts"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@template/typescript-config": "workspace:*"
+  },
+  "scripts": {
+    "ts": "tsgo -b --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write"
+  }
+}

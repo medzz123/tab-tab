@@ -1,0 +1,33 @@
+{
+  "name": "@template/db",
+  "type": "module",
+  "exports": {
+    ".": "./generated/prisma/client.ts",
+    "./prisma": "./src/client.ts"
+  },
+  "scripts": {
+    "db:reset": "rm -rf generated && pnpm db:down && pnpm db:up && pnpm db:generate && pnpm db:deploy && pnpm db:seed",
+    "db:generate": "prisma generate",
+    "db:seed": "prisma db seed",
+    "db:push": "prisma db push",
+    "db:migrate": "pnpm db:generate && prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio --port 5557",
+    "db:up": "docker rm -f main-db >/dev/null 2>&1 || true && docker compose up -d --wait",
+    "db:down": "docker compose down --volumes --remove-orphans || true",
+    "ts": "tsgo -b --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write"
+  },
+  "devDependencies": {
+    "@template/typescript-config": "workspace:*",
+    "prisma": "catalog:",
+    "tsx": "catalog:"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "catalog:",
+    "@prisma/client": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  }
+}

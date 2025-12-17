@@ -1,0 +1,229 @@
+name: Dev deployment
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  build-frontend: 
+    name: Build frontend 🏗️ 🎨
+    timeout-minutes: 10
+    runs-on: ubuntu-slim
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      actions: 'read'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+          cache: "pnpm"
+          cache-dependency-path: "**/pnpm-lock.yaml"
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm turbo run @template/app#build 
+
+      - uses: 'google-github-actions/auth@v3'
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - uses: 'google-github-actions/setup-gcloud@v3'
+
+      - run: pnpm zx scripts/upload-frontend.mjs
+
+      - if: ${{ failure() }}
+        name: Notify on Failure
+        run: npx zx scripts/notify-e2e-failure.mjs
+        env:
+          ACTOR: ${{ github.actor }}
+          SLACK_TOKEN: ${{ secrets.SLACK_PLAYTER_BOT_TOKEN }}
+          MESSAGE: development build frontend failed
+
+  build-backends:
+    name: Build backend 🏗️ 💾
+    timeout-minutes: 10
+    # Instead of running in parallel many builds we run at once, so needs to be beefier
+    # otherwise it takes too much time
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      actions: 'read'
+    env:
+      GCP_PROJECT_ID: playter-dev
+      GCP_REGION: europe-west2
+      ARTIFACT_REGISTRY_REPO: playter-dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: 'google-github-actions/auth@v3'
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - uses: 'google-github-actions/setup-gcloud@v3'
+      - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Set SHORT_SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA::8}" >> "$GITHUB_ENV"
+
+      - name: Build and push all images
+        uses: docker/bake-action@v6
+        with:
+          files: |
+            docker-bake.hcl
+          push: true
+          targets: default
+        env:
+          # These are passed to the 'variable' blocks in docker-bake.hcl
+          TAG: ${{ env.SHORT_SHA }}
+          GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ env.GCP_REGION }}
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+
+
+    name: Migrate & Deploy 🚀
+    timeout-minutes: 40
+    needs: [build-frontend, build-backends]
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      actions: 'read'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+          cache: "pnpm"
+          cache-dependency-path: "**/pnpm-lock.yaml"
+      - run: pnpm install --frozen-lockfile   
+        
+      - run: pnpm turbo run build --filter=@playter/deployment
+
+      - uses: 'google-github-actions/auth@v3'
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - uses: 'google-github-actions/setup-gcloud@v3'
+
+      - name: Cache Cloud SQL Proxy
+        id: cache-proxy
+        uses: actions/cache@v4
+        with:
+          path: cloud_sql_proxy
+          key: cloud-sql-proxy-${{ runner.os }}-v2.12.0
+
+      - name: Download Cloud SQL Proxy
+        if: steps.cache-proxy.outputs.cache-hit != 'true'
+        run: |
+          curl -o cloud_sql_proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.12.0/cloud-sql-proxy.linux.amd64
+          chmod +x cloud_sql_proxy
+
+      - run: pnpm turbo db:generate
+      
+      - run: |
+          echo "DATABASE_URL=${{ env.DATABASE_URL }}" > .env
+          echo "FINANCIALS_DATABASE_URL=${{ env.FINANCIALS_DATABASE_URL }}" >> .env
+
+          echo "DATABASE_URL=${{ env.DATABASE_URL }}" > libs/prisma/.env
+
+          echo "FINANCIALS_DATABASE_URL=${{ env.FINANCIALS_DATABASE_URL }}" > libs/financials-prisma/.env
+
+      - name: Migrate database
+        run: ./cloud_sql_proxy ${{ env.DATABASE_PROXY }} --port=5432 & sleep 20; pnpm turbo run @playter/prisma#db:deploy
+
+      - name: Migrate database (Financials)
+        run: ./cloud_sql_proxy ${{ env.FINANCIALS_DATABASE_PROXY }} --port=5555 & sleep 20; pnpm turbo run @playter/financials-prisma#db:deploy
+
+      - name: Deploy Backend Services
+        run:  pnpm zx scripts/deploy-on-gcp.mjs
+        env:
+          # We only deploy these in here, as the other ones are deployed by pulumi 
+          APPS: api,events-api,webhook
+          DEPLOY_ENV: dev
+          
+      - name: Deploy Frontend
+        run: npx zx scripts/deploy-frontend.mjs
+        env:
+          DEPLOY_ENV: dev
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+      - name: Short SHA
+        id: vars
+        run: echo "sha8=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy stack
+        uses: pulumi/actions@v6
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ''
+        with:
+          command: up
+          stack-name: dev
+          work-dir: apps/deployment
+          refresh: true
+          config-map: |
+            gcp:region:
+              value: europe-west2
+            imageTag:
+              value: ${{ steps.vars.outputs.sha8 }}
+          # cspell:disable
+          cloud-url: gs://pl-pulumi-state-dev-zkwdz
+          # cspell:enable
+          log-flow: true
+          log-verbosity: 3
+          debug: false
+          suppress-progress: true
+          
+      - if: ${{ failure() }}
+        name: Notify on Failure
+        run: npx zx scripts/notify-e2e-failure.mjs
+        env:
+          ACTOR: ${{ github.actor }}
+          SLACK_TOKEN: ${{ secrets.SLACK_PLAYTER_BOT_TOKEN }}
+          MESSAGE: development migrate & deploy failed
+          
+
+    # needs: migrate-deploy
+    name: E2E Tests
+    timeout-minutes: 15
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    concurrency:
+      group: e2e-job
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: 'pnpm'
+          cache-dependency-path: '**/pnpm-lock.yaml'
+
+      - name: Cache Cypress
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-14.5.1-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            cypress-${{ runner.os }}-
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Cypress binary (apps/e2e)
+        working-directory: apps/e2e
+        run: pnpm exec cypress install
+
+      - name: Run Cypress E2E Tests
+        run: pnpm turbo run:ci
+
+      - if: ${{ failure() }}
+        name: Notify on Failure
+        run: npx zx scripts/notify-e2e-failure.mjs
+        env:
+          ACTOR: ${{ github.actor }}
+          SLACK_TOKEN: ${{ secrets.SLACK_PLAYTER_BOT_TOKEN }}
+          MESSAGE: development e2e test failed

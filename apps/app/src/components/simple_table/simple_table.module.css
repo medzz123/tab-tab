@@ -1,0 +1,28 @@
+.cell {
+  border-top: 1px solid var(--mantine-color-gray-3);
+  padding: 7px 10px;
+  vertical-align: top;
+
+  &:first-child {
+    padding-left: 16px;
+  }
+
+  &:last-child {
+    padding-right: 16px;
+  }
+}
+
+.header {
+  &:first-child {
+    padding-left: 16px;
+  }
+
+  &:last-child {
+    padding-right: 16px;
+  }
+}
+
+.caption {
+  padding: rem(16);
+  border-top: 1px solid var(--mantine-color-gray-3);
+}

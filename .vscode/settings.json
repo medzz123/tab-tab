@@ -1,0 +1,58 @@
+{
+  "cSpell.words": [
+    "addgroup",
+    "axios",
+    "cloudrun",
+    "cloudrunv",
+    "cloudscheduler",
+    "dicebear",
+    "dotenv",
+    "healthcheck",
+    "imask",
+    "isready",
+    "jscodeshift",
+    "libc",
+    "mantine",
+    "pulumi",
+    "secretmanager",
+    "serviceaccount",
+    "servicenetworking",
+    "sslmode",
+    "Subnetworks",
+    "tabler",
+    "trpc",
+    "tsdown",
+    "tsgo",
+    "vite",
+    "vpcaccess"
+  ],
+  "files.associations": {
+    "*.env": "env",
+    "*.env.example": "env"
+  },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[javascriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[json]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[css]": { "editor.defaultFormatter": "biomejs.biome" },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.experimental.useTsgo": true
+}

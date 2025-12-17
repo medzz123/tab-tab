@@ -1,0 +1,31 @@
+{
+  "name": "@template/api",
+  "type": "module",
+  "scripts": {
+    "ts": "tsgo -b --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write",
+    "dev": "turbo run @template/scripts#sync-env -- api && tsx watch src/main.ts",
+    "build": "tsdown"
+  },
+  "devDependencies": {
+    "@template/typescript-config": "workspace:*",
+    "@template/logger": "workspace:*",
+    "@template/api-routes": "workspace:*",
+    "@template/db": "workspace:*",
+    "@template/env": "workspace:*",
+    "@types/cors": "2.8.17",
+    "@types/express": "4.17.21",
+    "@types/node": "22.13.11",
+    "tsdown": "catalog:",
+    "tsx": "catalog:"
+  },
+  "dependencies": {
+    "@trpc/server": "11.4.3",
+    "axios": "catalog:",
+    "cors": "2.8.5",
+    "dotenv": "catalog:",
+    "express": "5.2.0",
+    "zod": "catalog:"
+  }
+}

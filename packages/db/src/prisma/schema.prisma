@@ -1,0 +1,21 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../../generated/prisma"
+  moduleFormat    = "esm"
+  runtime         = "nodejs"
+  engineType      = "client"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model user {
+  id String @id() @default(uuid()) @db.Uuid()
+  created_at DateTime  @default(now())
+  updated_at DateTime @updatedAt()
+  name String 
+  email String @unique()
+}

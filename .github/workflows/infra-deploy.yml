@@ -1,0 +1,187 @@
+name: Infra deploy
+
+on:
+  workflow_call:
+    inputs:
+      gcp-project-id:
+        required: true
+        type: string
+      gcp-region:
+        required: true
+        type: string
+      artifact-gcp-region:
+        required: true
+        type: string
+      artifact-gcp-project-id:
+        required: true
+        type: string
+      artifact-registry-repo:
+        required: true
+        type: string
+      pulumi-stack-name:
+        required: true
+        type: string
+      pulumi-cloud-url:
+        required: true
+        type: string
+      image-tag:
+        required: true
+        type: string
+      netlify-site-id:
+        required: true
+        type: string
+      frontend-config-file-name:
+        required: true
+        type: string
+
+    secrets:
+      wif-provider:
+        required: true
+      wif-service-account:
+        required: true
+      dev-pulumi-config-passphrase:
+        required: true
+      dev-playter-gcp-sa-key:
+        required: true
+      netlify-auth-token:
+        required: true
+
+env:
+  NODE_OPTIONS: "--max_old_space_size=4096"
+
+jobs:
+  build-backends:
+    name: Build backend 🏗️ 💾
+    timeout-minutes: 10
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      actions: 'read'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.wif-provider }}
+          service_account: ${{ secrets.wif-service-account }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - run: gcloud auth configure-docker ${{ inputs.artifact-gcp-region }}-docker.pkg.dev
+      - name: Setup Docker Builder
+        uses: useblacksmith/setup-docker-builder@v1
+      - name: Build and push all images
+        uses: docker/bake-action@v6
+        with:
+          files: docker-bake.hcl
+          push: true
+          targets: default
+        env:
+          TAG: ${{ inputs.image-tag }}
+          GCP_PROJECT_ID: ${{ inputs.artifact-gcp-project-id }}
+          GCP_REGION: ${{ inputs.artifact-gcp-region }}
+          ARTIFACT_REGISTRY_REPO: ${{ inputs.artifact-registry-repo }}
+          # Prisma needs it for deploy etc, but we only generate in here so can put anything as long as its valid
+          DATABASE_URL: postgresql://postgres:fr24Password@localhost:5432/playter
+          FINANCIALS_DATABASE_URL: postgresql://postgres:codat1707@localhost:5555/financials
+
+  build-frontend:
+    name: Build frontend 🏗️ 🎨
+    timeout-minutes: 10
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      actions: 'read'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+          cache: "pnpm"
+          cache-dependency-path: "**/pnpm-lock.yaml"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run @playter/app#build
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.wif-provider }}
+          service_account: ${{ secrets.wif-service-account }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - run: pnpm --workspace-root --filter @playter/scripts run upload-frontend
+        env:
+          GCS_DESTINATION: gs://playter-builds/${{ inputs.image-tag }}/app.zip
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+
+  deploy:
+    name: Deploy 🚀
+    timeout-minutes: 40
+    needs: [build-backends]
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      actions: 'read'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+          cache: "pnpm"
+          cache-dependency-path: "**/pnpm-lock.yaml"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@playter/deployment-v2
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.dev-playter-gcp-sa-key }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - name: Deploy stack
+        uses: pulumi/actions@v6
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.dev-pulumi-config-passphrase }}
+        with:
+          command: up
+          stack-name: ${{ inputs.pulumi-stack-name }}
+          work-dir: apps/deployment-v2
+          refresh: true
+          upsert: true
+          config-map: |
+            imageTag:
+              value: ${{ inputs.image-tag }}
+          cloud-url: ${{ inputs.pulumi-cloud-url }}
+          log-flow: true
+          log-verbosity: 3
+          debug: false
+          suppress-progress: true
+
+  deploy-frontend:
+    name: Deploy frontend 🚀
+    timeout-minutes: 15
+    needs: [build-frontend]
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      actions: 'read'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+          cache: "pnpm"
+          cache-dependency-path: "**/pnpm-lock.yaml"
+      - run: pnpm install --frozen-lockfile
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.wif-provider }}
+          service_account: ${{ secrets.wif-service-account }}
+      - uses: google-github-actions/setup-gcloud@v3
+      
+      - run: pnpm --workspace-root --filter @playter/scripts run deploy-frontend
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.netlify-auth-token }}
+          SITE_ID: ${{ inputs.netlify-site-id }}
+          CONFIG_FILE_NAME: ${{ inputs.frontend-config-file-name }}
+          BUILD_SOURCE_GS_URL: gs://playter-builds/${{ inputs.image-tag }}/app.zip
+          GITHUB_WORKSPACE: ${{ github.workspace }}

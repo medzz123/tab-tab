@@ -1,0 +1,22 @@
+{
+  "name": "@template/logger",
+  "type": "module",
+  "exports": {
+    ".": "./src/createLogger.ts",
+    "./expressMiddleware": "./loggerExpressMiddleware"
+  },
+  "dependencies": {
+    "pino": "10.1.0",
+    "express": "5.1.0"
+  },
+  "devDependencies": {
+    "@template/typescript-config": "workspace:*",
+    "pino-pretty": "13.1.2",
+    "@types/express": "4.17.21"
+  },
+  "scripts": {
+    "ts": "tsc -b --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write"
+  }
+}
