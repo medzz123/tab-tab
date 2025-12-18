@@ -19,3 +19,5 @@ The app will be available at `http://localhost:7000` and the API at `http://loca
 
 - Improve snapshots to include rich editor styles
 - Save to database periodically to prevent data loss on server crashes
+- Do snapshots differently to include all edits instead of replacing raw text, so we don't lose history of who is writing what
+- Use tRPC instead of REST for everything that is not WebSocket-related, so it's type-safe with auto-generated types
