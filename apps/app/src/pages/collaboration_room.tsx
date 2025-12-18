@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import { BaseCard } from '@/components/base_card';
 import { clientConfig } from '@/config';
-// Import CSS module for collaboration caret styles
 import styles from './editor.module.css';
 
 type ConnectedUser = {
@@ -98,7 +97,9 @@ export const CollaborationRoom: React.FC<CollaborationRoomProps> = ({
             users.push({ name: state.user.name, color: state.user.color });
           }
         });
-        setConnectedUsers(users);
+        queueMicrotask(() => {
+          setConnectedUsers(users);
+        });
       },
     });
 
