@@ -1,5 +1,5 @@
-import type { HocuspocusProvider } from '@hocuspocus/provider';
-import { Avatar, Box, Button, Group, Stack, Text } from '@mantine/core';
+import { HocuspocusProvider } from '@hocuspocus/provider';
+import { Avatar, Box, Button, Center, Group, Stack, Text } from '@mantine/core';
 import { Link, RichTextEditor } from '@mantine/tiptap';
 import { IconBold, IconItalic, IconLogout } from '@tabler/icons-react';
 import Collaboration from '@tiptap/extension-collaboration';
@@ -8,8 +8,10 @@ import { useEditor } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import type React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import * as Y from 'yjs';
 import { BaseCard } from '@/components/base_card';
+import { clientConfig } from '@/config';
 import classes from './editor.module.css';
 
 const BoldIcon = () => <IconBold size={16} stroke={3.5} />;
@@ -133,16 +135,86 @@ const Tiptap: React.FC<TiptapProps> = (props) => {
 };
 
 type CollaborationRoomProps = {
-  provider: HocuspocusProvider;
   userName: string;
   userColor: string;
   roomName: string;
-  connectedUsers: ConnectedUser[];
   onDisconnect: () => void;
 };
 
 export const CollaborationRoom: React.FC<CollaborationRoomProps> = (props) => {
-  const { provider, userName, userColor, roomName, connectedUsers, onDisconnect } = props;
+  const { userName, userColor, roomName, onDisconnect } = props;
+  const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
+  const [status, setStatus] = useState('disconnected');
+  const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
+
+  useEffect(() => {
+    const ydoc = new Y.Doc();
+    const newProvider = new HocuspocusProvider({
+      url: clientConfig.wsUrl,
+      name: roomName,
+      document: ydoc,
+      onStatus: ({ status }) => {
+        setStatus(status);
+      },
+      onAwarenessUpdate: ({ states }) => {
+        const users: ConnectedUser[] = [];
+        states.forEach((state) => {
+          if (state.user?.name && state.user?.color) {
+            users.push({
+              name: state.user.name,
+              color: state.user.color,
+            });
+          }
+        });
+        setConnectedUsers(users);
+      },
+    });
+
+    // Set awareness field with user info
+    newProvider.setAwarenessField('user', {
+      name: userName,
+      color: userColor,
+    });
+
+    setProvider(newProvider);
+
+    return () => {
+      newProvider.destroy();
+    };
+  }, [roomName, userName, userColor]);
+
+  const handleDisconnect = () => {
+    if (provider) {
+      provider.destroy();
+      setProvider(null);
+    }
+    onDisconnect();
+  };
+
+  // Show connecting state
+  if (!provider) {
+    return (
+      <BaseCard
+        mih={400}
+        flex={1}
+        leftSection={userName}
+        rightSection={status}
+        applyBackgroundColor
+        bg={'violet'}
+      >
+        <Center h="100%">
+          <Stack gap="md" align="center">
+            <Text size="lg" fw={500}>
+              Connecting to {roomName}...
+            </Text>
+            <Text size="sm" c="dimmed">
+              Please wait
+            </Text>
+          </Stack>
+        </Center>
+      </BaseCard>
+    );
+  }
 
   return (
     <BaseCard
@@ -161,7 +233,7 @@ export const CollaborationRoom: React.FC<CollaborationRoomProps> = (props) => {
             variant="light"
             color="red"
             leftSection={<IconLogout size={14} />}
-            onClick={onDisconnect}
+            onClick={handleDisconnect}
             radius="md"
           >
             Disconnect
