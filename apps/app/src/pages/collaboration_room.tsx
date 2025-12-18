@@ -11,6 +11,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import { BaseCard } from '@/components/base_card';
+import { VersionHistory } from '@/components/version_history';
 import { clientConfig } from '@/config';
 import styles from './editor.module.css';
 
@@ -70,7 +71,7 @@ const Tiptap: React.FC<{ provider: HocuspocusProvider; name: string; color: stri
           </RichTextEditor.ControlsGroup>
         </BubbleMenu>
       )}
-      <RichTextEditor.Content h={400} />
+      <RichTextEditor.Content mih={400} />
     </RichTextEditor>
   );
 };
@@ -162,27 +163,64 @@ export const CollaborationRoom: React.FC<CollaborationRoomProps> = ({
               borderRadius: '8px',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
               height: '100%',
-              overflow: 'hidden',
+              overflow: 'scroll',
             }}
           >
             <Tiptap provider={provider} name={userName} color={userColor} />
           </Box>
         </Box>
-        <Box h={400} style={{ borderLeft: '1px solid var(--mantine-color-gray-3)' }} w={150} p="xs">
-          <Text fw={600} fz="xs" mb="xs">
-            Connected Users ({connectedUsers.length})
-          </Text>
-          <Stack>
-            {connectedUsers.map((user) => (
-              <Group key={user.name} gap="xs" p={0}>
-                <Avatar size="xs" style={{ backgroundColor: user.color }} radius="xl">
-                  {user.name.charAt(0).toUpperCase()}
-                </Avatar>
-                <Text fz="xs" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {user.name}
-                </Text>
-              </Group>
-            ))}
+        <Box h={400} style={{ borderLeft: '1px solid var(--mantine-color-gray-3)' }} w={200} p="xs">
+          <Stack gap="md" h="100%">
+            <Box>
+              <Text fw={600} fz="xs" mb="xs">
+                Connected Users ({connectedUsers.length})
+              </Text>
+              <Stack gap={4}>
+                {connectedUsers.map((user) => (
+                  <Group key={user.name} gap="xs" p={0}>
+                    <Avatar size="xs" style={{ backgroundColor: user.color }} radius="xl">
+                      {user.name.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Text fz="xs" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {user.name}
+                    </Text>
+                  </Group>
+                ))}
+              </Stack>
+            </Box>
+
+            <Box
+              style={{ borderTop: '1px solid var(--mantine-color-gray-3)', paddingTop: '0.5rem' }}
+            >
+              <VersionHistory
+                documentName={roomName}
+                onVersionLoad={() => {
+                  // Force editor to refresh by recreating provider
+                  if (provider) {
+                    provider.destroy();
+                    const ydoc = new Y.Doc();
+                    const newProvider = new HocuspocusProvider({
+                      url: clientConfig.wsUrl,
+                      name: roomName,
+                      document: ydoc,
+                      onAwarenessUpdate: ({ states }) => {
+                        const users: ConnectedUser[] = [];
+                        states.forEach((state) => {
+                          if (state.user?.name && state.user?.color) {
+                            users.push({ name: state.user.name, color: state.user.color });
+                          }
+                        });
+                        queueMicrotask(() => {
+                          setConnectedUsers(users);
+                        });
+                      },
+                    });
+                    newProvider.setAwarenessField('user', { name: userName, color: userColor });
+                    setProvider(newProvider);
+                  }
+                }}
+              />
+            </Box>
           </Stack>
         </Box>
       </Group>
