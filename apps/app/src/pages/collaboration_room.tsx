@@ -176,16 +176,39 @@ export const CollaborationRoom: React.FC<CollaborationRoomProps> = ({
                 Connected Users ({connectedUsers.length})
               </Text>
               <Stack gap={4}>
-                {connectedUsers.map((user) => (
-                  <Group key={user.name} gap="xs" p={0}>
-                    <Avatar size="xs" style={{ backgroundColor: user.color }} radius="xl">
-                      {user.name.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Text fz="xs" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {user.name}
-                    </Text>
-                  </Group>
-                ))}
+                {connectedUsers.map((user) => {
+                  const isCurrentUser = user.name === userName;
+                  return (
+                    <Group
+                      key={user.name}
+                      gap="xs"
+                      py={4}
+                      px={8}
+                      style={{
+                        backgroundColor: isCurrentUser
+                          ? 'var(--mantine-color-blue-0)'
+                          : 'transparent',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      <Avatar
+                        size="xs"
+                        style={{ backgroundColor: user.color }}
+                        radius="xl"
+                        color="initials"
+                      >
+                        {user.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Text
+                        fz="xs"
+                        fw={isCurrentUser ? 600 : 400}
+                        style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
+                        {user.name}
+                      </Text>
+                    </Group>
+                  );
+                })}
               </Stack>
             </Box>
 
