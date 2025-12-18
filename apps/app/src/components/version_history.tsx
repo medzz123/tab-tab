@@ -1,7 +1,7 @@
 import { ActionIcon, Button, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { IconCamera, IconHistory, IconRefresh } from '@tabler/icons-react';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { clientConfig } from '@/config';
 
 type Version = {
@@ -55,9 +55,9 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ documentName, on
         }
       );
       if (response.ok) {
+        await loadVersions();
         if (onVersionLoad) {
-          // Small delay to ensure server has processed
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 800));
           onVersionLoad();
         }
       }
@@ -65,15 +65,6 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ documentName, on
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadVersions();
-  }, [loadVersions]);
-
-  const formatDateTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
   };
 
   return (
@@ -123,7 +114,7 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ documentName, on
               style={{ textAlign: 'left' }}
             >
               <Text fz="xs" truncate>
-                {formatDateTime(version.timestamp)}
+                {new Date(version.timestamp).toLocaleString()}
               </Text>
             </Button>
           ))}
