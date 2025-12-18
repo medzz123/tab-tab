@@ -10,22 +10,35 @@ import { env } from './env';
 
 type DocumentVersion = {
   id: string;
+  name: string;
   timestamp: number;
   state: Uint8Array;
 };
 
 const versionHistory = new Map<string, DocumentVersion[]>();
 
-const createSnapshotFromState = (documentName: string, state: Uint8Array): DocumentVersion => {
+const createSnapshotFromState = (
+  documentName: string,
+  state: Uint8Array,
+  name: string
+): DocumentVersion => {
   const version: DocumentVersion = {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id: name,
+    name,
     timestamp: Date.now(),
     state,
   };
 
-  const versions = versionHistory.get(documentName);
-  if (versions) versions.push(version);
-  else versionHistory.set(documentName, [version]);
+  const versions = versionHistory.get(documentName) ?? [];
+  const existingIndex = versions.findIndex((v) => v.id === name);
+
+  if (existingIndex >= 0) {
+    versions[existingIndex] = version;
+  } else {
+    versions.push(version);
+  }
+
+  versionHistory.set(documentName, versions);
 
   return version;
 };
@@ -45,18 +58,25 @@ app.use('*', cors());
 app.get('/api/versions/:documentName', (c) => {
   const versions = versionHistory.get(c.req.param('documentName')) ?? [];
   return c.json({
-    versions: versions.map(({ id, timestamp }) => ({ id, timestamp })),
+    versions: versions.map(({ id, name, timestamp }) => ({ id, name, timestamp })),
   });
 });
 
 app.post('/api/versions/:documentName/snapshot', async (c) => {
   const documentName = c.req.param('documentName');
+  const body = await c.req.json();
+  const name = body.name || `Snapshot ${Date.now()}`;
 
   const direct = await hocuspocus.openDirectConnection(documentName, {});
   try {
     const state = Y.encodeStateAsUpdate(direct.document as Y.Doc);
-    const version = createSnapshotFromState(documentName, state);
-    return c.json({ success: true, id: version.id, timestamp: version.timestamp });
+    const version = createSnapshotFromState(documentName, state, name);
+    return c.json({
+      success: true,
+      id: version.id,
+      name: version.name,
+      timestamp: version.timestamp,
+    });
   } finally {
     await direct.disconnect();
   }
@@ -80,10 +100,21 @@ app.post('/api/versions/:documentName/:versionId/apply', async (c) => {
       Y.applyUpdate(doc, version.state);
     });
 
-    return c.json({ success: true, id: version.id, timestamp: version.timestamp });
+    return c.json({
+      success: true,
+      id: version.id,
+      name: version.name,
+      timestamp: version.timestamp,
+    });
   } finally {
     await direct.disconnect();
   }
+});
+
+app.delete('/api/versions/:documentName', (c) => {
+  const documentName = c.req.param('documentName');
+  versionHistory.delete(documentName);
+  return c.json({ success: true });
 });
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });

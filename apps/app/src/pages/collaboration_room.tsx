@@ -169,7 +169,7 @@ export const CollaborationRoom: React.FC<CollaborationRoomProps> = ({
             <Tiptap provider={provider} name={userName} color={userColor} />
           </Box>
         </Box>
-        <Box h={400} style={{ borderLeft: '1px solid var(--mantine-color-gray-3)' }} w={200} p="xs">
+        <Box h={400} style={{ borderLeft: '1px solid var(--mantine-color-gray-3)' }} w={225} p="xs">
           <Stack gap="md" h="100%">
             <Box>
               <Text fw={600} fz="xs" mb="xs">
