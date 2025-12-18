@@ -52,12 +52,10 @@ export const Editor: React.FC = () => {
     form.reset();
   };
 
-  // Show connection form
   if (!isConnected) {
     return <ConnectionForm form={form} onConnect={handleConnect} />;
   }
 
-  // Show connected room
   return (
     <CollaborationRoom
       userName={userName}
