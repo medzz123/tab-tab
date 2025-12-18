@@ -41,7 +41,12 @@ const Tiptap: React.FC<{ provider: HocuspocusProvider; name: string; color: stri
   });
 
   return (
-    <RichTextEditor editor={editor} h="100%">
+    <RichTextEditor
+      editor={editor}
+      styles={{
+        root: { border: 'none' },
+      }}
+    >
       {editor && (
         <BubbleMenu editor={editor}>
           <RichTextEditor.ControlsGroup>
@@ -51,7 +56,7 @@ const Tiptap: React.FC<{ provider: HocuspocusProvider; name: string; color: stri
           </RichTextEditor.ControlsGroup>
         </BubbleMenu>
       )}
-      <RichTextEditor.Content />
+      <RichTextEditor.Content h={400} />
     </RichTextEditor>
   );
 };
@@ -126,16 +131,16 @@ export const CollaborationRoom: React.FC<CollaborationRoomProps> = ({
       }
     >
       <Group wrap="nowrap" gap={0} h="100%" align="flex-start">
-        <Box w={400} mih={400} flex={1}>
+        <Box h={400} w="100%" flex={1} bg="blue.0">
           <Tiptap provider={provider} name={userName} color={userColor} />
         </Box>
-        <Box w={150} p="xs">
+        <Box h={400} style={{ borderLeft: '1px solid var(--mantine-color-gray-3)' }} w={150} p="xs">
           <Text fw={600} fz="xs" mb="xs">
             Connected Users ({connectedUsers.length})
           </Text>
-          <Stack gap="xs">
+          <Stack>
             {connectedUsers.map((user) => (
-              <Group key={user.name} gap="xs" p="xs">
+              <Group key={user.name} gap="xs" p={0}>
                 <Avatar size="xs" style={{ backgroundColor: user.color }} radius="xl">
                   {user.name.charAt(0).toUpperCase()}
                 </Avatar>

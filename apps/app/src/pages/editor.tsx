@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from '@/utils/use_form';
 import { CollaborationRoom } from './collaboration_room';
 import { ConnectionForm, connectionSchema } from './connection_form';
@@ -19,11 +19,15 @@ const colors = [
 
 const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
+const SESSION_STORAGE_KEYS = {
+  ROOM_NAME: 'editor_room_name',
+  USER_NAME: 'editor_user_name',
+  USER_COLOR: 'editor_user_color',
+};
+
 export const Editor: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
-  const [userName, setUserName] = useState<string>('');
   const [userColor, setUserColor] = useState<string>('');
-  const [roomName, setRoomName] = useState<string>('');
 
   const form = useForm(connectionSchema, {
     initial: {
@@ -38,19 +42,36 @@ export const Editor: React.FC = () => {
       return;
     }
 
-    const { roomName: room, userName: name } = form.values;
     const color = getRandomColor();
 
-    setRoomName(room);
-    setUserName(name);
+    sessionStorage.setItem(SESSION_STORAGE_KEYS.ROOM_NAME, form.values.roomName);
+    sessionStorage.setItem(SESSION_STORAGE_KEYS.USER_NAME, form.values.userName);
+    sessionStorage.setItem(SESSION_STORAGE_KEYS.USER_COLOR, color);
     setUserColor(color);
     setIsConnected(true);
   };
 
   const handleDisconnect = () => {
     setIsConnected(false);
+    sessionStorage.removeItem(SESSION_STORAGE_KEYS.ROOM_NAME);
+    sessionStorage.removeItem(SESSION_STORAGE_KEYS.USER_NAME);
     form.reset();
   };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no-need
+  useEffect(() => {
+    if (
+      sessionStorage.getItem(SESSION_STORAGE_KEYS.ROOM_NAME) &&
+      sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_NAME)
+    ) {
+      form.setValues({
+        roomName: sessionStorage.getItem(SESSION_STORAGE_KEYS.ROOM_NAME) || '',
+        userName: sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_NAME) || '',
+      });
+      setUserColor(sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_COLOR) || '');
+      setIsConnected(true);
+    }
+  }, []);
 
   if (!isConnected) {
     return <ConnectionForm form={form} onConnect={handleConnect} />;
@@ -58,9 +79,9 @@ export const Editor: React.FC = () => {
 
   return (
     <CollaborationRoom
-      userName={userName}
+      userName={form.values.userName}
       userColor={userColor}
-      roomName={roomName}
+      roomName={form.values.roomName}
       onDisconnect={handleDisconnect}
     />
   );
