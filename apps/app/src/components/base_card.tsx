@@ -8,7 +8,6 @@ import {
   Text,
   useMantineTheme,
 } from '@mantine/core';
-import { hexAlpha } from '@tab-tab/utils/hexAlpha';
 import type { Icon, IconProps } from '@tabler/icons-react';
 import { useMemo } from 'react';
 
@@ -57,7 +56,6 @@ export const BaseCard: React.FC<BaseCardProps> = (props) => {
     footerPadded = true,
     padded = true,
     fullHeight = false,
-    applyBackgroundColor = false,
     footer,
     footerProps,
     truncate,
@@ -86,20 +84,6 @@ export const BaseCard: React.FC<BaseCardProps> = (props) => {
     return colors[Number(position)] ?? _color;
   }, [mantineColors, _color]);
 
-  const selectedColor = useMemo(() => {
-    if (!_color) return undefined;
-
-    const [colorName] = _color.split('.');
-
-    if (!colorName) return undefined;
-
-    const colors = mantineColors[colorName];
-
-    if (!colors) return undefined;
-
-    return colors ?? undefined;
-  }, [mantineColors, _color]);
-
   const hasHeader = !!leftSection || !!rightSection;
 
   const LeftIcon = leftIcon;
@@ -120,9 +104,6 @@ export const BaseCard: React.FC<BaseCardProps> = (props) => {
       }}
       p={0}
       h={fullHeight ? '100%' : undefined}
-      bg={
-        selectedColor && applyBackgroundColor ? `${hexAlpha(selectedColor['3'], 0.1)}` : undefined
-      }
       {...rest}
     >
       {hasHeader && (

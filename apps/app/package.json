@@ -12,8 +12,6 @@
     "lint:fix": "biome check . --write"
   },
   "dependencies": {
-    "@dicebear/core": "9.2.2",
-    "@dicebear/thumbs": "^9.2.2",
     "@hocuspocus/provider": "^3.4.3",
     "@mantine/core": "8.3.5",
     "@mantine/dates": "8.3.5",
@@ -23,9 +21,6 @@
     "@mantine/notifications": "8.3.5",
     "@mantine/spotlight": "8.3.5",
     "@mantine/tiptap": "8.3.5",
-    "@tab-tab/result": "workspace:*",
-    "@tab-tab/shared": "workspace:*",
-    "@tab-tab/utils": "workspace:*",
     "@tabler/icons-react": "3.34.0",
     "@tanstack/react-query": "5.80.3",
     "@tanstack/react-router": "1.132.47",

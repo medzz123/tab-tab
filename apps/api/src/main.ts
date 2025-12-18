@@ -3,11 +3,9 @@ import { Hocuspocus } from '@hocuspocus/server';
 import { TiptapTransformer } from '@hocuspocus/transformer';
 import { serve } from '@hono/node-server';
 import { createNodeWebSocket } from '@hono/node-ws';
-import { log } from '@tab-tab/logger';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import * as Y from 'yjs';
-import { env } from './env';
 
 type DocumentVersion = {
   id: string;
@@ -171,9 +169,7 @@ app.get(
 
 const server = serve({
   fetch: app.fetch,
-  port: env.PORT,
+  port: 7001,
 });
 
 injectWebSocket(server);
-
-log.info(`Server listening on port ${env.PORT}`);
