@@ -32,15 +32,18 @@ const Tiptap: React.FC<{ provider: HocuspocusProvider; name: string; color: stri
   name,
   color,
 }) => {
-  const editor = useEditor({
-    shouldRerenderOnTransaction: true,
-    extensions: [
-      StarterKit.configure({ link: false }),
-      Link,
-      Collaboration.configure({ document: provider.document }),
-      CollaborationCaret.configure({ provider, user: { name, color } }),
-    ],
-  });
+  const editor = useEditor(
+    {
+      shouldRerenderOnTransaction: true,
+      extensions: [
+        StarterKit.configure({ link: false }),
+        Link,
+        Collaboration.configure({ document: provider.document, field: 'default' }),
+        CollaborationCaret.configure({ provider, user: { name, color } }),
+      ],
+    },
+    [provider]
+  );
 
   return (
     <RichTextEditor

@@ -72,8 +72,11 @@ importers:
   apps/api:
     dependencies:
       '@hocuspocus/server':
-        specifier: ^3.4.3
+        specifier: 3.4.3
         version: 3.4.3(y-protocols@1.0.7(yjs@13.6.28))(yjs@13.6.28)
+      '@hocuspocus/transformer':
+        specifier: 3.4.3
+        version: 3.4.3(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))(@tiptap/pm@3.13.0)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.4)(y-protocols@1.0.7(yjs@13.6.28))(yjs@13.6.28))(yjs@13.6.28)
       '@hono/node-server':
         specifier: ^1.19.7
         version: 1.19.7(hono@4.11.1)
@@ -1482,6 +1485,14 @@ packages:
     resolution: {integrity: sha512-a9bqAXUMBo9YBeuzqNf9C3eVbu1RIWUrtmFMGq+ZssQr3Jugt/5PCkZskgqhJNvPkyTARHcUtN80j/SDLylZmg==}
     peerDependencies:
       y-protocols: ^1.0.6
+      yjs: ^13.6.8
+
+  '@hocuspocus/transformer@3.4.3':
+    resolution: {integrity: sha512-jQZiqFGCvGQJLgE0nHZ4TdpEJlI7WkM8CKA1wLcs0beVs0kNXg32lykGckjveJwwJuJ/hieMqIEqj9POxTWPEw==}
+    peerDependencies:
+      '@tiptap/core': ^3.0.1
+      '@tiptap/pm': ^3.0.1
+      y-prosemirror: ^1.2.1
       yjs: ^13.6.8
 
   '@hono/node-server@1.19.6':
@@ -8462,6 +8473,14 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@hocuspocus/transformer@3.4.3(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))(@tiptap/pm@3.13.0)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.4)(y-protocols@1.0.7(yjs@13.6.28))(yjs@13.6.28))(yjs@13.6.28)':
+    dependencies:
+      '@tiptap/core': 3.13.0(@tiptap/pm@3.13.0)
+      '@tiptap/pm': 3.13.0
+      '@tiptap/starter-kit': 3.13.0
+      y-prosemirror: 1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.4)(y-protocols@1.0.7(yjs@13.6.28))(yjs@13.6.28)
+      yjs: 13.6.28
 
   '@hono/node-server@1.19.6(hono@4.10.6)':
     dependencies:

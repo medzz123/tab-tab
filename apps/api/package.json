@@ -21,7 +21,8 @@
     "tsx": "catalog:"
   },
   "dependencies": {
-    "@hocuspocus/server": "^3.4.3",
+    "@hocuspocus/server": "3.4.3",
+    "@hocuspocus/transformer": "3.4.3",
     "@hono/node-server": "^1.19.7",
     "@hono/node-ws": "^1.2.0",
     "@trpc/server": "11.4.3",
