@@ -17,10 +17,31 @@ type DocumentVersion = {
 };
 
 const versionHistory = new Map<string, DocumentVersion[]>();
-const editCounts = new Map<string, number>();
-const currentVersionIndices = new Map<string, number>();
 
-const EDIT_COUNT_THRESHOLD = 5;
+// Helper function to create a snapshot
+const createSnapshot = (documentName: string, document: Y.Doc) => {
+  const state = Y.encodeStateAsUpdate(document);
+  const version: DocumentVersion = {
+    id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
+    timestamp: Date.now(),
+    state,
+  };
+
+  if (!versionHistory.has(documentName)) {
+    versionHistory.set(documentName, []);
+  }
+
+  const versions = versionHistory.get(documentName)!;
+  versions.push(version);
+
+  // Keep only last 50 versions per document
+  if (versions.length > 50) {
+    versions.shift();
+  }
+
+  log.info(`Created snapshot ${version.id} for document ${documentName}`);
+  return version;
+};
 
 const hocuspocus = new Hocuspocus({
   name: 'default-instance',
@@ -35,46 +56,14 @@ const hocuspocus = new Hocuspocus({
 
     const newDoc = new Y.Doc();
     documentCache.set(documentName, newDoc);
+
+    // Initialize version history tracking
+    if (!versionHistory.has(documentName)) {
+      versionHistory.set(documentName, []);
+    }
+
     log.info(`Created new document in cache: ${documentName}`);
     return newDoc;
-  },
-  async onStoreDocument({ documentName, document }) {
-    const currentCount = editCounts.get(documentName) || 0;
-    const newCount = currentCount + 1;
-    editCounts.set(documentName, newCount);
-
-    if (newCount % EDIT_COUNT_THRESHOLD === 0) {
-      const state = Y.encodeStateAsUpdate(document);
-      const version: DocumentVersion = {
-        id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-        timestamp: Date.now(),
-        state,
-      };
-
-      if (!versionHistory.has(documentName)) {
-        versionHistory.set(documentName, []);
-      }
-
-      const versions = versionHistory.get(documentName)!;
-
-      const currentIndex = currentVersionIndices.get(documentName);
-      if (currentIndex !== undefined && currentIndex < versions.length - 1) {
-        versions.splice(currentIndex + 1);
-      }
-
-      versions.push(version);
-      currentVersionIndices.set(documentName, versions.length - 1);
-
-      if (versions.length > 50) {
-        versions.shift();
-        const idx = currentVersionIndices.get(documentName);
-        if (idx !== undefined && idx > 0) {
-          currentVersionIndices.set(documentName, idx - 1);
-        }
-      }
-
-      log.info(`Created snapshot ${version.id} for document ${documentName} (edit ${newCount})`);
-    }
   },
 });
 
@@ -82,32 +71,41 @@ const app = new Hono();
 
 app.use('*', cors());
 
-app.get('/api/versions/:documentName/status', async (c) => {
+app.get('/api/versions/:documentName', async (c) => {
   const documentName = c.req.param('documentName');
   const versions = versionHistory.get(documentName) || [];
-  const currentIndex = currentVersionIndices.get(documentName) ?? versions.length - 1;
 
   return c.json({
-    canGoBack: currentIndex > 0,
-    canGoForward: currentIndex < versions.length - 1 && currentIndex >= 0,
-    currentIndex,
-    totalVersions: versions.length,
+    versions: versions.map((v) => ({
+      id: v.id,
+      timestamp: v.timestamp,
+    })),
   });
 });
 
-app.post('/api/versions/:documentName/back', async (c) => {
+app.post('/api/versions/:documentName/snapshot', async (c) => {
   const documentName = c.req.param('documentName');
-  const versions = versionHistory.get(documentName) || [];
-  let currentIndex = currentVersionIndices.get(documentName) ?? versions.length - 1;
+  const doc = documentCache.get(documentName);
 
-  if (currentIndex <= 0) {
-    return c.json({ error: 'Cannot go back' }, 400);
+  if (!doc) {
+    return c.json({ error: 'Document not found' }, 404);
   }
 
-  currentIndex -= 1;
-  currentVersionIndices.set(documentName, currentIndex);
+  const version = createSnapshot(documentName, doc);
 
-  const version = versions[currentIndex];
+  return c.json({
+    success: true,
+    id: version.id,
+    timestamp: version.timestamp,
+  });
+});
+
+app.post('/api/versions/:documentName/:versionId/apply', async (c) => {
+  const documentName = c.req.param('documentName');
+  const versionId = c.req.param('versionId');
+  const versions = versionHistory.get(documentName) || [];
+  const version = versions.find((v) => v.id === versionId);
+
   if (!version) {
     return c.json({ error: 'Version not found' }, 404);
   }
@@ -117,63 +115,16 @@ app.post('/api/versions/:documentName/back', async (c) => {
     return c.json({ error: 'Document not found' }, 404);
   }
 
-  Y.applyUpdate(doc, version.state);
+  // Create a new document with the version state
+  const newDoc = new Y.Doc();
+  Y.applyUpdate(newDoc, version.state);
 
-  return c.json({ success: true, currentIndex });
-});
+  // Replace the document in cache
+  documentCache.set(documentName, newDoc);
 
-app.post('/api/versions/:documentName/forward', async (c) => {
-  const documentName = c.req.param('documentName');
-  const versions = versionHistory.get(documentName) || [];
-  let currentIndex = currentVersionIndices.get(documentName) ?? versions.length - 1;
+  log.info(`Applied version ${versionId} to document ${documentName}`);
 
-  if (currentIndex >= versions.length - 1) {
-    return c.json({ error: 'Cannot go forward' }, 400);
-  }
-
-  currentIndex += 1;
-  currentVersionIndices.set(documentName, currentIndex);
-
-  const version = versions[currentIndex];
-  if (!version) {
-    return c.json({ error: 'Version not found' }, 404);
-  }
-
-  const doc = documentCache.get(documentName);
-  if (!doc) {
-    return c.json({ error: 'Document not found' }, 404);
-  }
-
-  Y.applyUpdate(doc, version.state);
-
-  return c.json({ success: true, currentIndex });
-});
-
-app.post('/api/versions/:documentName/commit', async (c) => {
-  const documentName = c.req.param('documentName');
-  const versions = versionHistory.get(documentName) || [];
-  const currentIndex = currentVersionIndices.get(documentName);
-
-  if (currentIndex === undefined || currentIndex < 0 || currentIndex >= versions.length) {
-    return c.json({ error: 'No version to commit' }, 400);
-  }
-
-  const version = versions[currentIndex];
-  if (!version) {
-    return c.json({ error: 'Version not found' }, 404);
-  }
-
-  versions.splice(currentIndex + 1);
-  currentVersionIndices.set(documentName, versions.length - 1);
-
-  editCounts.set(documentName, 0);
-
-  const doc = documentCache.get(documentName);
-  if (doc && version) {
-    Y.applyUpdate(doc, version.state);
-  }
-
-  return c.json({ success: true });
+  return c.json({ success: true, id: version.id, timestamp: version.timestamp });
 });
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });

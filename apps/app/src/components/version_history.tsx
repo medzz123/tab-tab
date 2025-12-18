@@ -1,14 +1,12 @@
 import { ActionIcon, Button, Group, Stack, Text, Tooltip } from '@mantine/core';
-import { IconCheck, IconChevronLeft, IconChevronRight, IconHistory } from '@tabler/icons-react';
+import { IconCamera, IconHistory, IconRefresh } from '@tabler/icons-react';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { clientConfig } from '@/config';
 
-type VersionStatus = {
-  canGoBack: boolean;
-  canGoForward: boolean;
-  currentIndex: number;
-  totalVersions: number;
+type Version = {
+  id: string;
+  timestamp: number;
 };
 
 type VersionHistoryProps = {
@@ -17,68 +15,49 @@ type VersionHistoryProps = {
 };
 
 export const VersionHistory: React.FC<VersionHistoryProps> = ({ documentName, onVersionLoad }) => {
-  const [status, setStatus] = useState<VersionStatus | null>(null);
+  const [versions, setVersions] = useState<Version[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const loadStatus = useCallback(async () => {
+  const loadVersions = useCallback(async () => {
     try {
-      const response = await fetch(`${clientConfig.apiUrl}/api/versions/${documentName}/status`);
+      const response = await fetch(`${clientConfig.apiUrl}/api/versions/${documentName}`);
       const data = await response.json();
-      setStatus(data);
+      setVersions(data.versions || []);
     } catch {}
   }, [documentName]);
 
-  const goBack = async () => {
-    if (!status?.canGoBack || loading) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${clientConfig.apiUrl}/api/versions/${documentName}/back`, {
-        method: 'POST',
-      });
-      if (response.ok) {
-        await loadStatus();
-        if (onVersionLoad) {
-          onVersionLoad();
-        }
-      }
-    } catch {
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const goForward = async () => {
-    if (!status?.canGoForward || loading) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${clientConfig.apiUrl}/api/versions/${documentName}/forward`, {
-        method: 'POST',
-      });
-      if (response.ok) {
-        await loadStatus();
-        if (onVersionLoad) {
-          onVersionLoad();
-        }
-      }
-    } catch {
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const commit = async () => {
+  const createSnapshot = async () => {
     if (loading) return;
 
     setLoading(true);
     try {
-      const response = await fetch(`${clientConfig.apiUrl}/api/versions/${documentName}/commit`, {
+      const response = await fetch(`${clientConfig.apiUrl}/api/versions/${documentName}/snapshot`, {
         method: 'POST',
       });
       if (response.ok) {
-        await loadStatus();
+        await loadVersions();
+      }
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyVersion = async (versionId: string) => {
+    if (loading) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${clientConfig.apiUrl}/api/versions/${documentName}/${versionId}/apply`,
+        {
+          method: 'POST',
+        }
+      );
+      if (response.ok) {
         if (onVersionLoad) {
+          // Small delay to ensure server has processed
+          await new Promise((resolve) => setTimeout(resolve, 100));
           onVersionLoad();
         }
       }
@@ -89,12 +68,13 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ documentName, on
   };
 
   useEffect(() => {
-    loadStatus();
-    const interval = setInterval(loadStatus, 2000);
-    return () => clearInterval(interval);
-  }, [loadStatus]);
+    loadVersions();
+  }, [loadVersions]);
 
-  const isViewingOldVersion = status && status.currentIndex < status.totalVersions - 1;
+  const formatDateTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+  };
 
   return (
     <Stack gap="xs" p="xs">
@@ -105,47 +85,49 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({ documentName, on
             History
           </Text>
         </Group>
+        <Group gap="xs">
+          <Tooltip label="Refresh">
+            <ActionIcon size="sm" variant="light" onClick={loadVersions} disabled={loading}>
+              <IconRefresh size={14} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Create snapshot">
+            <ActionIcon
+              size="sm"
+              variant="light"
+              onClick={createSnapshot}
+              loading={loading}
+              disabled={loading}
+            >
+              <IconCamera size={14} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
       </Group>
 
-      <Group gap="xs">
-        <Tooltip label="Previous snapshot">
-          <ActionIcon
-            size="sm"
-            variant="light"
-            onClick={goBack}
-            disabled={!status?.canGoBack || loading}
-          >
-            <IconChevronLeft size={14} />
-          </ActionIcon>
-        </Tooltip>
-
-        <Text fz="xs" c="dimmed" style={{ flex: 1, textAlign: 'center' }}>
-          {status ? `${status.currentIndex + 1} / ${status.totalVersions || 1}` : '-'}
+      {versions.length === 0 ? (
+        <Text fz="xs" c="dimmed" ta="center" py="md">
+          No snapshots yet
         </Text>
-
-        <Tooltip label="Next snapshot">
-          <ActionIcon
-            size="sm"
-            variant="light"
-            onClick={goForward}
-            disabled={!status?.canGoForward || loading}
-          >
-            <IconChevronRight size={14} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-
-      {isViewingOldVersion && (
-        <Button
-          size="xs"
-          variant="filled"
-          fullWidth
-          leftSection={<IconCheck size={14} />}
-          onClick={commit}
-          disabled={loading}
-        >
-          Commit as Latest
-        </Button>
+      ) : (
+        <Stack gap={4} style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          {versions.map((version) => (
+            <Button
+              key={version.id}
+              size="xs"
+              variant="subtle"
+              fullWidth
+              justify="flex-start"
+              onClick={() => applyVersion(version.id)}
+              disabled={loading}
+              style={{ textAlign: 'left' }}
+            >
+              <Text fz="xs" truncate>
+                {formatDateTime(version.timestamp)}
+              </Text>
+            </Button>
+          ))}
+        </Stack>
       )}
     </Stack>
   );
