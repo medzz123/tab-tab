@@ -6,13 +6,11 @@ export const Route = createFileRoute('/')({
   component: Index,
 });
 
-// --- COMPONENT 3: Main Form (Your Code) ---
 function Index() {
   return (
     <Stack mih="100vh" h="100%">
       <Center m="auto" h="100%" w="100%" p="md">
         <Group maw={1200}>
-          <Editor />
           <Editor />
         </Group>
       </Center>
