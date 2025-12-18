@@ -1,8 +1,6 @@
-/* Collaboration caret styles */
 .tiptap {
-  /* Caret - thin vertical line in user's color */
   :global(.collaboration-carets__caret) {
-    border-left: 1px solid;
+    border-left: 2px solid;
     border-right: none;
     margin-left: -1px;
     margin-right: 0;
@@ -12,28 +10,29 @@
     display: inline-block;
     height: 1.2em;
     vertical-align: text-bottom;
+    border-color: var(--caret-color, currentColor);
+    opacity: 0.8;
   }
 
-  /* Label - floating above the caret */
   :global(.collaboration-carets__label) {
-    background-color: #ffc0cb;
-    border-radius: 3px 3px 3px 0;
-    color: #0d0d0d;
-    font-size: 12px;
+    background-color: var(--caret-color, #958DF1);
+    border-radius: 4px 4px 4px 0;
+    color: #ffffff;
+    font-size: 11px;
     font-style: normal;
     font-weight: 600;
     left: -1px;
     line-height: normal;
-    padding: 0.1rem 0.3rem;
+    padding: 0.15rem 0.4rem;
     position: absolute;
-    top: -1.4em;
+    top: -1.5em;
     user-select: none;
     white-space: nowrap;
     z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-    /* Flag-like protrusion pointing to caret - matches caret border color */
     &::after {
-      background-color: var(--caret-border-color, #0d0d0d);
+      background-color: var(--caret-color, #958DF1);
       bottom: -4px;
       clip-path: polygon(0 0, 100% 0, 80% 100%);
       content: '';

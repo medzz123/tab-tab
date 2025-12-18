@@ -12,6 +12,8 @@ import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 import { BaseCard } from '@/components/base_card';
 import { clientConfig } from '@/config';
+// Import CSS module for collaboration caret styles
+import styles from './editor.module.css';
 
 type ConnectedUser = {
   name: string;
@@ -43,8 +45,21 @@ const Tiptap: React.FC<{ provider: HocuspocusProvider; name: string; color: stri
   return (
     <RichTextEditor
       editor={editor}
+      classNames={{
+        root: styles.tiptap,
+      }}
       styles={{
-        root: { border: 'none' },
+        root: {
+          border: 'none',
+          backgroundColor: 'transparent',
+          height: '100%',
+        },
+        content: {
+          padding: '1.5rem',
+          minHeight: '100%',
+          fontSize: '15px',
+          lineHeight: '1.6',
+        },
       }}
     >
       {editor && (
@@ -131,8 +146,26 @@ export const CollaborationRoom: React.FC<CollaborationRoomProps> = ({
       }
     >
       <Group wrap="nowrap" gap={0} h="100%" align="flex-start">
-        <Box h={400} w="100%" flex={1} bg="blue.0">
-          <Tiptap provider={provider} name={userName} color={userColor} />
+        <Box
+          h={400}
+          w="100%"
+          flex={1}
+          style={{
+            padding: '1.5rem',
+            backgroundColor: 'var(--mantine-color-gray-0)',
+          }}
+        >
+          <Box
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              height: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            <Tiptap provider={provider} name={userName} color={userColor} />
+          </Box>
         </Box>
         <Box h={400} style={{ borderLeft: '1px solid var(--mantine-color-gray-3)' }} w={150} p="xs">
           <Text fw={600} fz="xs" mb="xs">
